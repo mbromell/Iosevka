@@ -53,10 +53,5 @@ font-src/glyphs/**/*.mjs
 packages/font-glyphs/src/**/*.mjs
 packages/font-otl/src/**/*.mjs
 
-private.toml
-private-build-plans.toml
-private.mk
-params/private-parameters.toml
-
 # Ignore tmp directory
 tmp
