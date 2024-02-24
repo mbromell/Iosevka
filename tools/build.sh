@@ -6,7 +6,8 @@ npm run build -- woff2::Brosevka
 pushd font-patcher/
 for font in ../dist/Brosevka/TTF/*.ttf; do
 	echo "font: $font"
-    fontforge -script font-patcher --complete $font -out ../dist/Brosevka/NF
+    fontforge -script font-patcher --no-progressbars --complete \
+		$font -out ../dist/Brosevka/NF
 done
 popd
 
