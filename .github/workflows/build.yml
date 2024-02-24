@@ -18,12 +18,8 @@ jobs:
           sudo add-apt-repository -y ppa:fontforge/fontforge
           sudo apt-get install -y fontforge zip ttfautohint build-essential
           ./tools/setup.sh
-          # cd font-patcher/
-          # python -m venv venv/
       - name: Build fonts
         run: |
-          # source font-patcher/venv/bin/activate
-          # python -m pip install setuptools
           ./tools/build.sh
       - name: Upload release files
         uses: softprops/action-gh-release@v1
