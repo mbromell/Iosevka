@@ -5,6 +5,8 @@ import { Anchor } from "@iosevka/geometry/anchor";
 import { Vec2 } from "@iosevka/geometry/point";
 import { Transform } from "@iosevka/geometry/transform";
 
+import { ScheduleLeaningMark } from "./relation.mjs";
+
 export class Glyph {
 	constructor(identifier) {
 		this._m_identifier = identifier;
@@ -105,20 +107,25 @@ export class Glyph {
 	}
 	includeGlyph(g, copyAnchors, copyWidth) {
 		if (g instanceof Function) throw new Error("Unreachable");
+		if (g.isMarkSet) throw new Error("Invalid component to be introduced.");
 		// Combine anchors and get offset
 		let shift = new Vec2(0, 0);
 		this.combineMarks(g, shift);
 		this.includeGlyphImpl(g, shift.x, shift.y);
-		if (g.isMarkSet) throw new Error("Invalid component to be introduced.");
 		if (copyAnchors) this.copyAnchors(g);
 		if (copyWidth && g.advanceWidth >= 0) this.advanceWidth = g.advanceWidth;
+	}
+	includeMarkWithLeaningSupport(g, lm) {
+		let shift = new Vec2(0, 0);
+		this.combineMarks(g, shift, lm);
+		this.includeGlyphImpl(g, shift.x, shift.y);
 	}
 	includeGlyphImpl(g, shiftX, shiftY) {
 		if (g._m_identifier) {
 			this.includeGeometry(new Geom.ReferenceGeometry(g, shiftX, shiftY));
 		} else {
 			this.includeGeometry(
-				new Geom.TransformedGeometry(g.geometry, Transform.Translate(shiftX, shiftY))
+				new Geom.TransformedGeometry(Transform.Translate(shiftX, shiftY), g.geometry),
 			);
 		}
 	}
@@ -132,7 +139,7 @@ export class Glyph {
 		this.includeGeometry(new Geom.ContourSetGeometry(cs));
 	}
 	applyTransform(tfm, alsoAnchors) {
-		this.geometry = new Geom.TransformedGeometry(this.geometry, tfm);
+		this.geometry = new Geom.TransformedGeometry(tfm, this.geometry);
 		if (alsoAnchors) {
 			for (const k in this.baseAnchors)
 				this.baseAnchors[k] = Anchor.transform(tfm, this.baseAnchors[k]);
@@ -143,8 +150,8 @@ export class Glyph {
 	tryBecomeMirrorOf(dst, rankSet) {
 		if (rankSet.has(this) || rankSet.has(dst)) return;
 		if (dst.hasDependency(this)) return;
-		const csThis = this.geometry.unlinkReferences().toShapeStringOrNull();
-		const csDst = dst.geometry.unlinkReferences().toShapeStringOrNull();
+		const csThis = Geom.hashGeometry(this.geometry.unlinkReferences());
+		const csDst = Geom.hashGeometry(dst.geometry.unlinkReferences());
 		if (csThis && csDst && csThis === csDst) {
 			this.geometry = new Geom.CombineGeometry([new Geom.ReferenceGeometry(dst, 0, 0)]);
 			rankSet.add(this);
@@ -157,26 +164,52 @@ export class Glyph {
 		this.geometry = this.geometry.filterTag(t => tag !== t);
 	}
 	// Anchors
-	combineMarks(g, shift) {
+	combineMarks(g, shift, lm) {
 		if (!g.markAnchors) return;
-		for (const m in g.markAnchors) {
-			const markThat = g.markAnchors[m];
-			const baseThis = this.baseAnchors[m];
-			if (!baseThis) continue;
-			shift.x = baseThis.x - markThat.x;
-			shift.y = baseThis.y - markThat.y;
+		const fScheduledLeaning = lm && ScheduleLeaningMark.get(g);
+		for (const mk in g.markAnchors) {
+			// Find the base mark class and anchor
+			const baseThisN = this.baseAnchors[mk];
+			if (!baseThisN) continue;
+
+			// Find the leaning base mark class and anchor, if any
+			let mkLeaning = mk;
+			if (fScheduledLeaning) {
+				for (const [mkT, mkLeaningT] of lm)
+					if (mk === mkT && this.baseAnchors[mkLeaningT]) mkLeaning = mkLeaningT;
+			}
+			const baseThisL = this.baseAnchors[mkLeaning];
+			if (!baseThisL) continue;
+
+			// Find the mark anchor in mark glyph
+			const markThat = g.markAnchors[mk];
+
+			// Calculate the shift
+			shift.x = baseThisL.x - markThat.x;
+			shift.y = baseThisL.y - markThat.y;
+
+			// Place anchors from mark glyph to current glyph
 			let fSuppress = true;
 			if (g.baseAnchors) {
-				for (const m2 in g.baseAnchors) {
-					if (m2 === m) fSuppress = false;
-					const baseDerived = g.baseAnchors[m2];
-					this.baseAnchors[m2] = new Anchor(
-						shift.x + baseDerived.x,
-						shift.y + baseDerived.y
+				for (const mkNewMark in g.baseAnchors) {
+					const baseDerived = g.baseAnchors[mkNewMark];
+					this.baseAnchors[mkNewMark] = new Anchor(
+						baseThisN.x - markThat.x + baseDerived.x,
+						baseThisN.y - markThat.y + baseDerived.y,
 					);
+					if (mkNewMark === mk) {
+						fSuppress = false;
+						if (mkLeaning !== mk) {
+							this.baseAnchors[mkLeaning] = new Anchor(
+								baseThisL.x - markThat.x + baseDerived.x,
+								baseThisL.y - markThat.y + baseDerived.y,
+							);
+						}
+					}
 				}
 			}
-			if (fSuppress) delete this.baseAnchors[m];
+			if (fSuppress) delete this.baseAnchors[mk];
+			break;
 		}
 	}
 	copyAnchors(g) {

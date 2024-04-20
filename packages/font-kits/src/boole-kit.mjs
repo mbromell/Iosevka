@@ -17,13 +17,13 @@ class BooleImpl {
 			const g1 = new Glyph();
 			g1.gizmo = forwardGizmo;
 			g1.include(operand);
-			operandGeometries.push(new TransformedGeometry(g1.geometry, backwardGizmo));
+			operandGeometries.push(new TransformedGeometry(backwardGizmo, g1.geometry));
 		}
 		return glyph.includeGeometry(
 			new TransformedGeometry(
+				forwardGizmo,
 				new BooleanGeometry(this.operator, operandGeometries),
-				forwardGizmo
-			)
+			),
 		);
 	}
 }
@@ -37,6 +37,6 @@ export function SetupBuilders(bindings) {
 	return {
 		union: union,
 		intersection: intersection,
-		difference: difference
+		difference: difference,
 	};
 }

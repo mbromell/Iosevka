@@ -1,7 +1,8 @@
 $$include '../meta/macros.ptl'
 
 import [mix clamp fallback] from "@iosevka/util"
-import [Dotless CvDecompose RightDependentTrigger RightDependentLink DependentSelector] from "@iosevka/glyph/relation"
+import [Dotless CvDecompose] from "@iosevka/glyph/relation"
+import [RightDependentTrigger RightDependentLink DependentSelector] from "@iosevka/glyph/relation"
 import [DesignParameters] from "../meta/aesthetics.mjs"
 
 glyph-module
@@ -9,15 +10,26 @@ glyph-module
 glyph-block Letter-Shared : begin
 	glyph-block-import CommonShapes
 	glyph-block-import Common-Derivatives
-	glyph-block-import Mark-Adjustment : TurnMarks
+	glyph-block-import Mark-Adjustment : TurnMarks LeaningAnchorMap
+
+	glyph-block-export CreateMultiAccentedComposition
+	define [CreateMultiAccentedComposition dst u gnSrc gnAccents]
+		derive-multi-part-glyphs dst u { gnSrc :: gnAccents } : function [gns gr] : glyph-proc
+			local { gnBase :: gnAccents } gns
+
+			include [refer-glyph gnBase] AS_BASE ALSO_METRICS
+			foreach gnAccent [items-of gnAccents] : begin
+				local gAccent : query-glyph gnAccent
+				currentGlyph.includeMarkWithLeaningSupport gAccent LeaningAnchorMap
+
+			if (!gr) : begin
+				if (gnAccents.length === 1 && gnAccents.0 === 'dotAbove')
+				: then : Dotless.set currentGlyph gnBase
+				: else : CvDecompose.set currentGlyph { gnSrc :: gnAccents }
 
 	glyph-block-export CreateAccentedComposition
 	define [CreateAccentedComposition dst u srcGid accentGid]
-		derive-multi-part-glyphs dst u { srcGid accentGid } : function [gns gr] : glyph-proc
-			local { base mark } gns
-			include [refer-glyph base] AS_BASE ALSO_METRICS
-			include [refer-glyph mark]
-			if (!gr && accentGid === 'dotAbove') : Dotless.set currentGlyph base
+		CreateMultiAccentedComposition dst u srcGid { accentGid }
 
 	glyph-block-export CreateOgonekComposition
 	define [CreateOgonekComposition dst u srcGid]
@@ -39,13 +51,6 @@ glyph-block Letter-Shared : begin
 			include : refer-glyph comma
 			include : ApparentTranslate commaOffset 0
 			include [refer-glyph base] AS_BASE ALSO_METRICS
-
-	glyph-block-export CreateMultiAccentedComposition
-	define [CreateMultiAccentedComposition dstGid unicode srcGid accentGids fDontDecompose]
-		derive-glyphs dstGid unicode srcGid : lambda [src gr] : glyph-proc
-			include [refer-glyph src] AS_BASE ALSO_METRICS
-			foreach accentGid [items-of accentGids] : include [refer-glyph accentGid]
-			if (!fDontDecompose && !gr) : CvDecompose.set currentGlyph { src :: accentGids }
 
 	glyph-block-export CreateDependentComposite
 	define [CreateDependentComposite gidDst unicode gidPart1 gidPart2Map] : begin
@@ -557,36 +562,38 @@ glyph-block Letter-Shared-Shapes : begin
 
 	glyph-block-export InwardSlabArcStart
 	define InwardSlabArcStart : namespace
-		export : define [RtlLhs sx cx cy sw hook] : begin
+		export : define [RtlLhs sx cx cy sw _hook] : begin
 			return : list
-				g4 sx (cy - DToothlessRise) [widths.lhs sw]
-				g4 (cx - CorrectionOMidX * sw) (cy - O)
+				g2 sx (cy - DToothlessRise) [widths.lhs sw]
+				g2.left.mid (cx - CorrectionOMidX * sw) (cy - O)
 				archv
 
-		export : define [LtrRhs sx cx cy sw hook] : begin
+		export : define [LtrRhs sx cx cy sw _hook] : begin
 			return : list
-				g4 sx (cy - DToothlessRise) [widths.rhs sw]
-				g4 (cx - CorrectionOMidX * sw) (cy - O)
+				g2 sx (cy - DToothlessRise) [widths.rhs sw]
+				g2.right.mid (cx - CorrectionOMidX * sw) (cy - O)
 				archv
 
 	glyph-block-export InwardSlabArcEnd
 	define InwardSlabArcEnd : namespace
-		export : define [RtlRhs sx cx cy sw hook] : begin
+		export : define [RtlRhs sx cx cy sw _hook] : begin
 			return : list
 				arcvh
-				g4 (cx + CorrectionOMidX * sw) (cy + O)
-				g4 sx (cy + DToothlessRise) [widths.rhs sw]
-		export : define [LtrLhs sx cx cy sw hook] : begin
+				g2.left.mid (cx + CorrectionOMidX * sw) (cy + O)
+				g2 sx (cy + DToothlessRise) [widths.rhs sw]
+		export : define [LtrLhs sx cx cy sw _hook] : begin
 			return : list
 				arcvh
-				g4 (cx + CorrectionOMidX * sw) (cy + O)
-				g4 sx (cy + DToothlessRise) [widths.lhs sw]
+				g2.right.mid (cx + CorrectionOMidX * sw) (cy + O)
+				g2 sx (cy + DToothlessRise) [widths.lhs sw]
 
 	glyph-block-export ArcStartSerifWidth
 	define [ArcStartSerifWidth stroke] : clamp (stroke * 0.875) stroke VJutStroke
 
 	glyph-block-export ArcStartSerifDepth
 	define [ArcStartSerifDepth hook] : hook - O * 2
+
+	define [ArcStartInwardSerifDepth hook stroke] : Math.max (hook + DToothlessRise / 3) (DToothlessRise + stroke)
 
 	glyph-block-export : ArcStartSerif
 	define ArcStartSerif : namespace
@@ -596,9 +603,9 @@ glyph-block Letter-Shared-Shapes : begin
 			return : tagged 'arcStartSerifR' : VBar.r cx (cy - hook + O * 2) (cy + [fallback overflow 0]) [ArcStartSerifWidth stroke]
 
 		export : define [InwardL cx cy stroke hook] : begin
-			return : tagged 'arcStartSerifL' : VBar.l cx (cy - hook - DToothlessRise / 3) (cy - DToothlessRise) [ArcStartSerifWidth stroke]
+			return : tagged 'arcStartSerifL' : VBar.l cx (cy - [ArcStartInwardSerifDepth hook stroke]) (cy - DToothlessRise) [ArcStartSerifWidth stroke]
 		export : define [InwardR cx cy stroke hook] : begin
-			return : tagged 'arcStartSerifR' : VBar.r cx (cy - hook - DToothlessRise / 3) (cy - DToothlessRise) [ArcStartSerifWidth stroke]
+			return : tagged 'arcStartSerifR' : VBar.r cx (cy - [ArcStartInwardSerifDepth hook stroke]) (cy - DToothlessRise) [ArcStartSerifWidth stroke]
 
 	glyph-block-export : ArcEndSerif
 	define ArcEndSerif : namespace
@@ -608,9 +615,9 @@ glyph-block Letter-Shared-Shapes : begin
 			return : tagged 'arcEndSerifR' : VBar.r cx (cy + hook - O * 2) (cy - [fallback overflow 0]) [ArcStartSerifWidth stroke]
 
 		export : define [InwardL cx cy stroke hook] : begin
-			return : tagged 'arcEndSerifL' : VBar.l cx (cy + hook + DToothlessRise / 2) (cy + DToothlessRise) [ArcStartSerifWidth stroke]
+			return : tagged 'arcEndSerifL' : VBar.l cx (cy + [ArcStartInwardSerifDepth hook stroke]) (cy + DToothlessRise) [ArcStartSerifWidth stroke]
 		export : define [InwardR cx cy stroke hook] : begin
-			return : tagged 'arcEndSerifR' : VBar.r cx (cy + hook + DToothlessRise / 2) (cy + DToothlessRise) [ArcStartSerifWidth stroke]
+			return : tagged 'arcEndSerifR' : VBar.r cx (cy + [ArcStartInwardSerifDepth hook stroke]) (cy + DToothlessRise) [ArcStartSerifWidth stroke]
 
 	glyph-block-export DiagTail
 	define DiagTail : namespace

@@ -1,4 +1,5 @@
 font-patcher/
+releases/
 
 # Logs
 logs
@@ -24,36 +25,29 @@ build/Release
 # Dependency directory
 # Deployed apps should consider commenting this line out:
 # see https://npmjs.org/doc/faq.html#Should-I-check-my-node_modules-folder-into-git
+# Dependency
 node_modules
 
-
+# Settings
 .settings
 .vscode
 
-# Special
-*.ttf
-*.7z
-test/
-preview/
-.build/
-build/
-dist/
-ref/
-pages/
-releases/
-release-archives/
-testdrive/iosevka*
+# Build artifacts
+.build
+dist
+release-archives
 
-# Generated scripts
-font-src/meta/**/*.js
-font-src/otl/**/*.js
-font-src/glyphs/**/*.js
-font-src/meta/**/*.mjs
-font-src/otl/**/*.mjs
-font-src/glyphs/**/*.mjs
-
+# Generated files
 packages/font-glyphs/src/**/*.mjs
 packages/font-otl/src/**/*.mjs
 
 # Ignore tmp directory
 tmp
+# Private config files
+private.toml
+private-build-plans.toml
+
+# pages-source ignores
+.next
+out
+shared/fonts/imports/*/TTF/*

@@ -30,7 +30,7 @@ glyph-block Symbol-Math-APL : begin
 
 		local corners : new-glyph : glyph-proc
 			set this.gizmo : Translate 0 0
-			foreach [c : items-of : overlay.geometry.asContours] : foreach [z : items-of c] : do
+			foreach [c : items-of : overlay.geometry.toContours] : foreach [z : items-of c] : do
 				if (z.type === Point.Type.Corner) : begin
 					define x z.x
 					define y z.y
@@ -271,6 +271,7 @@ glyph-block Symbol-Math-APL : begin
 	LinkAplFormForNwidWwid 'uni2687'
 
 	# Uiua symbols
+	LinkAplFormForNwidWwid 'whiteDiamond'
 	LinkAplFormForNwidWwid 'whiteSquare'
 	LinkAplFormForNwidWwid 'whiteTriangleUp'
 	LinkAplFormForNwidWwid 'whiteTriangleDown'

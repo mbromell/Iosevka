@@ -30,7 +30,7 @@ export async function generateTtfaControls(gsOrig, gsTtf) {
 		alignment.write(ttfaControls, gsTtf);
 	}
 
-	return ttfaControls;
+	return ttfaControls.join("\n") + "\n";
 }
 
 class Alignment {
@@ -68,7 +68,7 @@ class Alignment {
 					Gr.Texture.ExtLR,
 					Gr.Texture.ShrL,
 					Gr.Texture.ShrR,
-					Gr.Texture.ShrLR
+					Gr.Texture.ShrLR,
 				];
 				for (const gr of cvs) {
 					const gnLinked = gr.get(go);

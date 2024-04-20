@@ -31,7 +31,7 @@ function getSupportLocaleSet(rawCoverage) {
 			...(exemplar.auxiliary || []),
 			...(exemplar.index || []),
 			...(exemplar.numbers || []),
-			...(exemplar.punctuation || [])
+			...(exemplar.punctuation || []),
 		].join("");
 		let fullSupport = true;
 		let basicSupport = true;
@@ -81,8 +81,8 @@ function getSupportedLangs(supportLocaleSet) {
 
 function getRawCoverage(charMap) {
 	const rawCoverage = new Map();
-	for (const [gn, codes, tv, cv] of charMap)
-		for (const u of codes) rawCoverage.set(u, [gn, tv, cv]);
+	for (const [gn, codes, tv, cv, cp] of charMap)
+		for (const u of codes) rawCoverage.set(u, [gn, tv, cv, cp]);
 	return rawCoverage;
 }
 
@@ -99,10 +99,10 @@ export async function getCharMapAndSupportedLanguageList(cmpUpright, cmpItalic, 
 	return {
 		stats: {
 			glyphCount: charMap.length,
-			codePointCount: rawCoverage.size
+			codePointCount: rawCoverage.size,
 		},
 		featureSeries: covData.featureSeries,
 		unicodeCoverage: covData.unicodeCoverage,
-		languages: Array.from(getSupportedLanguageSet(rawCoverage)).sort()
+		languages: Array.from(getSupportedLanguageSet(rawCoverage)).sort(),
 	};
 }

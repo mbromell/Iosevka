@@ -2,7 +2,7 @@ import { linreg, mix } from "@iosevka/util";
 import * as SpiroJs from "spiro";
 
 import { Vec2 } from "./point.mjs";
-import { ControlKnot } from "./spiro-control.mjs";
+import { MonoKnot } from "./spiro-control.mjs";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -23,6 +23,7 @@ export class SpiroExpander {
 		const centerBone = this.getPass2Knots();
 		const normalRectifier = new NormalRectifier(this.m_biKnotsT, this.m_gizmo);
 		SpiroJs.spiroToArcsOnContext(centerBone, this.m_closed, normalRectifier);
+		return normalRectifier.totalDelta / normalRectifier.nKnotsProcessed;
 	}
 	getPass2Knots() {
 		const expanded = this.expand(this.m_contrast);
@@ -30,26 +31,27 @@ export class SpiroExpander {
 		for (let j = 0; j < this.m_biKnotsT.length; j++) {
 			const lhs = expanded.lhs[j];
 			const rhs = expanded.rhs[j];
-			middles[j] = new ControlKnot(
+			middles[j] = new MonoKnot(
 				this.m_biKnotsT[j].type,
+				this.m_biKnotsT[j].unimportant,
 				mix(lhs.x, rhs.x, 0.5),
-				mix(lhs.y, rhs.y, 0.5)
+				mix(lhs.y, rhs.y, 0.5),
 			);
 		}
 		return middles;
 	}
 	expand() {
-		const lhs = [],
-			rhs = [],
-			lhsUntransformed = [],
-			rhsUntransformed = [];
+		const lhsT = [], // transformed LHS
+			rhsT = [], // transformed RHS
+			lhsU = [], // untransformed LHS
+			rhsU = []; // untransformed RHS
 
 		for (let j = 0; j < this.m_biKnotsT.length; j++) {
-			const knot = this.m_biKnotsT[j];
-			lhs[j] = new ControlKnot(knot.type, 0, 0);
-			rhs[j] = new ControlKnot(reverseKnotType(knot.type), 0, 0);
-			lhsUntransformed[j] = new ControlKnot(knot.type, 0, 0);
-			rhsUntransformed[j] = new ControlKnot(reverseKnotType(knot.type), 0, 0);
+			const bk = this.m_biKnotsT[j];
+			lhsT[j] = new MonoKnot(bk.type, bk.unimportant, 0, 0);
+			rhsT[j] = new MonoKnot(bk.type, bk.unimportant, 0, 0);
+			lhsU[j] = new MonoKnot(bk.type, bk.unimportant, 0, 0);
+			rhsU[j] = new MonoKnot(bk.type, bk.unimportant, 0, 0);
 		}
 
 		for (let j = 0; j < this.m_biKnotsT.length; j++) {
@@ -63,17 +65,17 @@ export class SpiroExpander {
 				dx = normalX(knotT.origTangent, this.m_contrast);
 				dy = normalY(knotT.origTangent, this.m_contrast);
 			}
-			lhs[j].x = knotT.x + knotT.d1 * dx;
-			lhs[j].y = knotT.y + knotT.d1 * dy;
-			rhs[j].x = knotT.x - knotT.d2 * dx;
-			rhs[j].y = knotT.y - knotT.d2 * dy;
+			lhsT[j].x = knotT.x + knotT.d1 * dx;
+			lhsT[j].y = knotT.y + knotT.d1 * dy;
+			rhsT[j].x = knotT.x - knotT.d2 * dx;
+			rhsT[j].y = knotT.y - knotT.d2 * dy;
 
-			this.m_gizmo.unapplyToSink(lhs[j], lhsUntransformed[j]);
-			this.m_gizmo.unapplyToSink(rhs[j], rhsUntransformed[j]);
+			this.m_gizmo.unapplyToSink(lhsT[j], lhsU[j]);
+			this.m_gizmo.unapplyToSink(rhsT[j], rhsU[j]);
 		}
 
-		this.interpolateUnimportantKnots(lhs, rhs, lhsUntransformed, rhsUntransformed);
-		return { lhs, rhs, lhsUntransformed, rhsUntransformed };
+		this.interpolateUnimportantKnots(lhsT, rhsT, lhsU, rhsU);
+		return { lhs: lhsT, rhs: rhsT, lhsUntransformed: lhsU, rhsUntransformed: rhsU };
 	}
 	interpolateUnimportantKnots(lhsT, rhsT, lhsU, rhsU) {
 		for (let j = 0; j < this.m_biKnotsU.length; j++) {
@@ -104,36 +106,49 @@ class NormalRectifier {
 	constructor(stage1ControlKnots, gizmo) {
 		this.m_gizmo = gizmo;
 		this.m_biKnots = stage1ControlKnots;
-		this.m_nKnotsProcessed = 0;
+
+		this.nKnotsProcessed = 0;
+		this.totalDelta = 0;
 	}
 	beginShape() {}
 	endShape() {}
 	moveTo(x, y) {
-		this.m_nKnotsProcessed += 1;
+		this.nKnotsProcessed += 1;
 	}
 	arcTo(arc, x, y) {
-		if (this.m_nKnotsProcessed === 1) {
+		if (this.nKnotsProcessed === 1) {
 			const d = new Vec2(arc.deriveX0, arc.deriveY0);
 			if (isTangentValid(d)) {
-				this.m_biKnots[0].origTangent = d;
+				this.updateKnotTangent(this.m_biKnots[0], d);
 			} else {
 				throw new Error("NaN angle detected.");
 			}
 		}
-		if (this.m_biKnots[this.m_nKnotsProcessed]) {
+		if (this.m_biKnots[this.nKnotsProcessed]) {
 			const d = new Vec2(arc.deriveX1, arc.deriveY1);
 			if (isTangentValid(d)) {
-				this.m_biKnots[this.m_nKnotsProcessed].origTangent = d;
+				this.updateKnotTangent(this.m_biKnots[this.nKnotsProcessed], d);
 			} else {
 				throw new Error("NaN angle detected.");
 			}
 		}
-		this.m_nKnotsProcessed += 1;
+		this.nKnotsProcessed += 1;
+	}
+
+	updateKnotTangent(knot, d) {
+		if (isTangentValid(knot.origTangent)) {
+			this.totalDelta +=
+				(d.x - knot.origTangent.x) * (d.x - knot.origTangent.x) +
+				(d.y - knot.origTangent.y) * (d.y - knot.origTangent.y);
+		} else {
+			this.totalDelta += 4;
+		}
+		knot.origTangent = d;
 	}
 }
 
 function isTangentValid(d) {
-	return isFinite(d.x) && isFinite(d.y);
+	return d && isFinite(d.x) && isFinite(d.y);
 }
 
 function normalX(tangent, contrast) {
@@ -143,9 +158,6 @@ function normalY(tangent) {
 	return tangent.x / Math.hypot(tangent.x, tangent.y);
 }
 
-function reverseKnotType(ty) {
-	return ty === "left" ? "right" : ty === "right" ? "left" : ty;
-}
 function cyNth(a, j) {
 	return a[j % a.length];
 }

@@ -9,6 +9,10 @@ export class Vec2 {
 	static from(z) {
 		return new Vec2(z.x, z.y);
 	}
+
+	static scaleFrom(s, z) {
+		return new Vec2(s * z.x, s * z.y);
+	}
 }
 
 export class Point {
@@ -33,7 +37,7 @@ export class Point {
 		return new Point(
 			this.type,
 			this.x + scale * (z2.x - this.x),
-			this.y + scale * (z2.y - this.y)
+			this.y + scale * (z2.y - this.y),
 		);
 	}
 	scale(t) {
@@ -61,11 +65,7 @@ export class Point {
 		return Point.transformedXY(tfm, z.type, z.x, z.y);
 	}
 	static transformedXY(tfm, type, x, y) {
-		return new Point(
-			type,
-			x * tfm.xx + y * tfm.yx + tfm.x || 0,
-			x * tfm.xy + y * tfm.yy + tfm.y || 0
-		);
+		return new Point(type, tfm.applyX(x, y), tfm.applyY(x, y));
 	}
 	static translated(z, dx, dy) {
 		return new Point(z.type, z.x + dx || 0, z.y + dy || 0);
@@ -78,5 +78,5 @@ Point.Type = {
 	Corner: 0,
 	CubicStart: 1,
 	CubicEnd: 2,
-	Quadratic: 3
+	Quadratic: 3,
 };
