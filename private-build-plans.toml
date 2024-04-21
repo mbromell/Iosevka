@@ -22,6 +22,7 @@ exportGlyphNames = false
     asterisk = "penta-high"
     paren = "normal"
     brace = "curly"
+    dollar = "through"
     percent = "rings-continuous-slash"
     bar = "force-upright"
     question = "corner"
@@ -31,6 +32,7 @@ exportGlyphNames = false
     f = "flat-hook-tailed"
     g = "double-storey-open"
     l = "serifed-diagonal-tailed"
+    y = "cursive-serifless"
 
 [buildPlans.Brosevka.widths.Normal]
 shape = 600
