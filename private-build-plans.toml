@@ -5,24 +5,32 @@ serifs = "sans"
 noCvSs = true
 exportGlyphNames = false
 
-[buildPlans.Brosevka.variants]
-# Jetbrains mono variant
-inherits = "ss14"
+  [buildPlans.Brosevka.variants]
+  inherits = "ss08"
 
-[buildPlans.Brosevka.variants.design]
-capital-q = "crossing-curly-tailed"
-capital-w = "straight-serifless"
-m = "short-leg-serifless"
-w = "straight-serifless"
-zero = "dotted"
-two = "curly-neck-serifless"
-asterisk = "penta-high"
-lig-ltgteq = "flat"
+    [buildPlans.Brosevka.variants.design]
+    capital-n = "standard-serifless"
+    capital-q = "crossing-curly-tailed"
+    capital-x = "straight-serifless"
+    f = "flat-hook-serifless"
+    g = "single-storey-flat-hook-serifless"
+    l = "serifed-flat-tailed"
+    y = "straight-turn-serifless"
+    zero = "slashed"
+    four = "semi-open-non-crossing-serifless"
+    eight = "two-circles"
+    asterisk = "penta-high"
+    paren = "normal"
+    brace = "curly"
+    percent = "rings-continuous-slash"
+    bar = "force-upright"
+    question = "corner"
+    lig-ltgteq = "flat"
 
-[buildPlans.Brosevka.variants.italic]
-capital-w = "curly-motion-serifed"
-m = "short-leg-serifless"
-w = "straight-serifless"
+    [buildPlans.Brosevka.variants.italic]
+    f = "flat-hook-tailed"
+    g = "double-storey-open"
+    l = "serifed-diagonal-tailed"
 
 [buildPlans.Brosevka.widths.Normal]
 shape = 600

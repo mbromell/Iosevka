@@ -4,9 +4,10 @@ npm run build -- ttf::Brosevka
 npm run build -- woff2::Brosevka
 
 docker run --rm \
-	-v dist/Brosevka/TTF:/in:Z \
-	-v dist/Brosevka/NF:/out:Z \
-	nerdfonts/patcher
+	-v $(pwd)/dist/Brosevka/TTF:/in:Z \
+	-v $(pwd)/dist/Brosevka/NF:/out:Z \
+	nerdfonts/patcher:latest \
+	--debug 2 --no-progressbars --complete
 
 mkdir -p releases/
 pushd releases/
