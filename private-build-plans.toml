@@ -17,7 +17,6 @@ exportGlyphNames = false
     x = "curly-serifless"
     y = "straight-turn-serifless"
     zero = "slashed"
-    two = "curly-neck-serifless"
     asterisk = "penta-high"
     paren = "normal"
     bar = "force-upright"
@@ -30,7 +29,6 @@ exportGlyphNames = false
     capital-j = "serifed"
     capital-k = "curly-serifless"
     capital-v = "curly-serifless"
-    capital-w = "straight-motion-serifed"
     capital-x = "curly-serifless"
     capital-y = "curly-serifless"
     capital-z = "curly-serifless"
@@ -53,6 +51,11 @@ exportGlyphNames = false
     x = "semi-chancery-straight"
     y = "cursive-serifless"
     z = "curly-serifless"
+    two = "curly-neck-serifless"
+    three = "flat-top-serifless"
+    six = "open-contour"
+    seven = "bend-serifless"
+    nine = "open-contour"
 
 [buildPlans.Brosevka.widths.Normal]
 shape = 600
