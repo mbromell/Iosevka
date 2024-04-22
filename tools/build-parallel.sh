@@ -7,7 +7,7 @@ docker run --rm \
 	-v $(pwd)/dist/Brosevka/TTF:/in:Z \
 	-v $(pwd)/dist/Brosevka/NF:/out:Z \
 	nerdfonts/patcher:latest \
-	--debug 2 --no-progressbars --complete
+	--no-progressbars --complete
 
 mkdir -p releases/
 pushd releases/

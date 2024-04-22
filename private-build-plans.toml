@@ -2,37 +2,52 @@
 family = "Brosevka"
 spacing = "term"
 serifs = "sans"
-noCvSs = true
+noCvSs = false
 exportGlyphNames = false
 
   [buildPlans.Brosevka.variants]
-  inherits = "ss08"
+  inherits = "ss14"
 
     [buildPlans.Brosevka.variants.design]
-    capital-n = "standard-serifless"
     capital-q = "crossing-curly-tailed"
-    capital-x = "straight-serifless"
-    f = "flat-hook-serifless"
-    g = "single-storey-flat-hook-serifless"
-    l = "serifed-flat-tailed"
+    capital-w = "straight-serifless"
+    w = "straight-serifless"
+    x = "curly-serifless"
     y = "straight-turn-serifless"
     zero = "slashed"
-    four = "semi-open-non-crossing-serifless"
-    eight = "two-circles"
+    two = "curly-neck-serifless"
     asterisk = "penta-high"
     paren = "normal"
-    brace = "curly"
-    dollar = "through"
-    percent = "rings-continuous-slash"
     bar = "force-upright"
-    question = "corner"
     lig-ltgteq = "flat"
 
     [buildPlans.Brosevka.variants.italic]
-    f = "flat-hook-tailed"
+    capital-a = "curly-serifless"
+    capital-b = "more-asymmetric-serifless"
+    capital-d = "standard-serifless"
+    capital-j = "serifed"
+    capital-k = "curly-serifless"
+    capital-v = "curly-serifless"
+    capital-w = "straight-motion-serifed"
+    capital-x = "curly-serifless"
+    capital-y = "curly-serifless"
+    capital-z = "curly-serifless"
     g = "double-storey-open"
+    h = "tailed-motion-serifed"
+    i = "serifed-diagonal-tailed"
+    j = "diagonal-tailed-serifed"
+    k = "symmetric-touching-bottom-right-serifed"
     l = "serifed-diagonal-tailed"
+    q = "earless-corner-tailed-serifless"
+    r = "corner-hooked-serifless"
+    s = "unilateral-serifed"
+    t = "flat-hook-asymmetric"
+    u = "tailed-serifless"
+    v = "curly-motion-serifed"
+    w = "cursive-serifless"
+    x = "semi-chancery-straight"
     y = "cursive-serifless"
+    z = "curly-serifless"
 
 [buildPlans.Brosevka.widths.Normal]
 shape = 600
