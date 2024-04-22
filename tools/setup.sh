@@ -5,7 +5,7 @@ npm install
 
 echo "Installing Nerd Font font-patcher"
 [ -d "font-patcher" ] && rm -rf font-patcher
-curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/FontPatcher.zip \
+curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/download/latest/FontPatcher.zip \
 	--output font-patcher.zip
 unzip font-patcher.zip -d font-patcher
 rm font-patcher.zip
